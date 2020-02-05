@@ -1,0 +1,171 @@
+//just assume for this purpose that particleEmittorLocationX and Y are both 500
+//don't mind the UV coords for it all
+
+	for (int i = 0; i < totalParticles; i++)
+	{
+		part[i].partChild.resize(part[i].maxParticles);
+		for (int l = 0; l < part[i].maxParticles; l++)
+		{
+			part[i].partChild[l].resize(7);
+			part[i].partChild[l][0] = part[i].particleEmittorLocationX;
+			part[i].partChild[l][1] = part[i].particleEmittorLocationY;
+			part[i].partChild[l][2] = 30;
+		}
+	}
+  
+  unsigned int particleCount = 0;
+	unsigned int totalParticleCount = 0;
+
+		std::vector<float> particlePositions = {};
+		for (int i = 0; i < totalParticles; i++)
+		{
+			for (int j = 0; j < part[i].maxParticles; j++)
+			{
+ 				particleCount += 16;
+				particlePositions.resize(particleCount);
+				//if (part[i].partChild[j][0] == 0) { std::cout << "This is true " << std::endl; }
+				//if (part[i].partChild[j][1] == 0) { std::cout << "This is true " << std::endl; } 
+				particlePositions[0 + particleCount - 16] = part[i].partChild[j][0];
+				particlePositions[1 + particleCount - 16] = part[i].partChild[j][1];
+				particlePositions[2 + particleCount - 16] = atlas[part[i].particleAtlasID].U[part[i].particleTextureAtlasID][0];
+				particlePositions[3 + particleCount - 16] = atlas[part[i].particleAtlasID].V[part[i].particleTextureAtlasID][0];
+				particlePositions[4 + particleCount - 16] = part[i].partChild[j][0] + part[i].partChild[j][2];
+				particlePositions[5 + particleCount - 16] = part[i].partChild[j][1];
+				particlePositions[6 + particleCount - 16] = atlas[part[i].particleAtlasID].U[part[i].particleTextureAtlasID][1];
+				particlePositions[7 + particleCount - 16] = atlas[part[i].particleAtlasID].V[part[i].particleTextureAtlasID][1];
+				particlePositions[8 + particleCount - 16] = part[i].partChild[j][0] + part[i].partChild[j][2];
+				particlePositions[9 + particleCount - 16] = part[i].partChild[j][1] + part[i].partChild[j][2];
+				particlePositions[10 + particleCount - 16] = atlas[part[i].particleAtlasID].U[part[i].particleTextureAtlasID][2];
+				particlePositions[11 + particleCount - 16] = atlas[part[i].particleAtlasID].V[part[i].particleTextureAtlasID][2];
+				particlePositions[12 + particleCount - 16] = part[i].partChild[j][0];
+				particlePositions[13 + particleCount - 16] = part[i].partChild[j][1] + part[i].partChild[j][2];
+				particlePositions[14 + particleCount - 16] = atlas[part[i].particleAtlasID].U[part[i].particleTextureAtlasID][3];
+				particlePositions[15 + particleCount - 16] = atlas[part[i].particleAtlasID].V[part[i].particleTextureAtlasID][3];
+				totalParticleCount++;
+			}
+		}
+
+float* particlePositionsPointer = particlePositions.data();
+
+
+	std::vector<unsigned int> bufferParticlePositions = {};
+		for (int i = 0; i < totalParticles; i++)
+		{
+			for (int j = 0; j < part[i].maxParticles; j++)
+			{
+				particleBufferCount += 6;
+				bufferParticlePositions.resize(particleBufferCount);
+				bufferParticlePositions[0 + particleBufferCount - 6] = 0 + (i * part[i].maxParticles * 4) + j * 4;
+				bufferParticlePositions[1 + particleBufferCount - 6] = 1 + (i * part[i].maxParticles * 4) + j * 4;
+				bufferParticlePositions[2 + particleBufferCount - 6] = 2 + (i * part[i].maxParticles * 4) + j * 4;
+				bufferParticlePositions[3 + particleBufferCount - 6] = 2 + (i * part[i].maxParticles * 4) + j * 4;
+				bufferParticlePositions[4 + particleBufferCount - 6] = 3 + (i * part[i].maxParticles * 4) + j * 4;
+				bufferParticlePositions[5 + particleBufferCount - 6] = 0 + (i * part[i].maxParticles * 4) + j * 4;
+				std::cout << bufferParticlePositions[0 + particleBufferCount - 6] << std::endl;
+				std::cout << " " << std::endl;
+			}
+		}
+
+		unsigned int* bufferParticlePositionsPointer = bufferParticlePositions.data();	//converts std::vector to a pointer
+
+
+			VertexArray va[5];
+
+			VertexBuffer vb[5] = 
+			{ 
+				{ballPositions, vectorElements * 4 * sizeof(float)},
+				{positions, vectorElements * 4 * sizeof(float)},
+				{tilePositions, totalTiles * vectorElements * 4 * sizeof(float)},
+				{animatedPositions, totalAnimatedTextures * vectorElements * 4 * sizeof(float)},
+				{particlePositionsPointer, totalParticleCount * 4 * 4 * sizeof(float)}
+			};
+      
+      //In this case, using vb[4]
+      
+      
+      layout[4].Push<float>(2);
+			layout[4].Push<float>(2);
+			va[4].AddBuffer(vb[4], layout[4]);
+
+			IndexBuffer ib[4] =
+			{
+				{standardTile, 6},
+				{bufferTiles, totalTiles*6},
+				{bufferanimatedTextures, totalAnimatedTextures * 6},
+				{bufferParticlePositionsPointer, particleBufferCount * 6}
+			};
+      
+      //in this case using ib[3]
+      
+      
+      //Section updates the particles X and Y to the direction they're travelling
+      
+      	for (int i = 0; i < totalParticles; i++)
+				{
+					for (int j = 0; j < part[i].maxParticles; j++)
+					{
+						float partVecX = part[i].partChild[j][5] - part[i].partChild[j][0];
+						float partVecY = part[i].partChild[j][6] - part[i].partChild[j][1];
+						float partDist = sqrt(pow(partVecX, 2) + pow(partVecY, 2));
+						float partVelX = (partVecX / partDist) * part[i].particleSpeed;
+						float partVelY = (partVecY / partDist) * part[i].particleSpeed;
+						int partRandX = rand() % part[i].particleDistortion - part[i].particleDistortion / 2;
+						int partRandY = rand() % part[i].particleDistortion - part[i].particleDistortion / 2;
+						part[i].partChild[j][0] += partVelX + partRandX;
+						part[i].partChild[j][1] += partVelY + partRandY;
+						if (part[i].partChild[j][0] > part[i].partChild[j][5] - part[i].particleDistortion*2 && part[i].partChild[j][0] < part[i].partChild[j][5] + part[i].particleDistortion*2 &&
+							part[i].partChild[j][1] > part[i].partChild[j][6] - part[i].particleDistortion*2 && part[i].partChild[j][1] < part[i].partChild[j][6] + part[i].particleDistortion*2)
+						{
+							part[i].partChild[j][0] = part[i].particleEmittorLocationX;
+							part[i].partChild[j][1] = part[i].particleEmittorLocationY;
+						}
+					}
+				}
+        
+        //section reads data determined above, re-initializes array particlePositions and sends new data to glBufferData
+        
+				{
+					unsigned int particleCount = 0;
+					unsigned int totalParticleCount = 0;
+
+					for (int i = 0; i < totalParticles; i++)
+					{
+						for (int j = 0; j < part[i].maxParticles; j++)
+						{
+							totalParticleCount++;
+							particlePositions[0 + particleCount] = part[i].partChild[j][0];
+							particlePositions[1 + particleCount] = part[i].partChild[j][1];
+							particlePositions[4 + particleCount] = part[i].partChild[j][0] + part[i].partChild[j][2];
+							particlePositions[5 + particleCount] = part[i].partChild[j][1];
+							particlePositions[8 + particleCount] = part[i].partChild[j][0] + part[i].partChild[j][2];
+							particlePositions[9 + particleCount] = part[i].partChild[j][1] + part[i].partChild[j][2];
+							particlePositions[12 + particleCount] = part[i].partChild[j][0];
+							particlePositions[13 + particleCount] = part[i].partChild[j][1] + part[i].partChild[j][2];
+							particleCount += 16;
+						}
+					}
+
+					float* particlePositionsPointer = particlePositions.data();
+
+					vb[4].newData(particlePositionsPointer, totalParticleCount * 4 * 4 * sizeof(float), 0);
+					va[4].AddBuffer(vb[4], layout[4]);
+
+					glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(addX, addY, 0));
+					glm::mat4 mvp = proj * view * model;
+					Texture texture(atlas[2].Directory);
+					texture.Bind();
+					shader[0].Bind();
+					shader[0].SetUniformMat4f("u_MVP", mvp);
+
+					renderer.Draw(va[4], ib[3], shader[0]);
+				}
+        
+        //All particles are drawn for 1 frame
+      
+      
+      
+
+
+
+
+
